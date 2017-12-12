@@ -172,8 +172,8 @@ schema.pre('remove', true, async function preRemoveGroup (next, done) {
   }
 });
 
-// return a clean object for user.quest
-function _cleanQuestProgress (merge) {
+// return a clean object for user.quest, while saving the user's progress to count towards the next quest
+function _cleanUserQuestData (merge) {
   let clean = {
     key: null,
     progress: {
@@ -597,7 +597,7 @@ schema.methods.startQuest = async function startQuest (user) {
     _id: { $in: nonMembers },
   }, {
     $set: {
-      'party.quest': _cleanQuestProgress(),
+      'party.quest': _cleanUserQuestData(),
     },
   }, { multi: true }).exec();
 
@@ -660,7 +660,7 @@ schema.methods.sendGroupChatReceivedWebhooks = function sendGroupChatReceivedWeb
   });
 };
 
-schema.statics.cleanQuestProgress = _cleanQuestProgress;
+schema.statics.cleanUserQuestData = _cleanUserQuestData;
 
 // returns a clean object for group.quest
 schema.statics.cleanGroupQuest = function cleanGroupQuest () {
@@ -738,7 +738,7 @@ schema.methods.finishQuest = async function finishQuest (quest) {
   if (this._id === TAVERN_ID) {
     updates.$set['party.quest.completed'] = questK; // Just show the notif
   } else {
-    updates.$set['party.quest'] = _cleanQuestProgress({completed: questK}); // clear quest progress
+    updates.$set['party.quest'] = _cleanUserQuestData({completed: questK});
   }
 
   _.each(_.reject(quest.drop.items, 'onlyOwner'), (item) => {
