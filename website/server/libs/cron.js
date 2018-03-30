@@ -1,5 +1,6 @@
 import moment from 'moment';
 import { model as User } from '../models/user';
+import { MAX_DAMAGE_TO_WORLD_BOSS } from '../models/group';
 import common from '../../common/';
 import { preenUserHistory } from '../libs/preening';
 import sleep from '../libs/sleep';
@@ -168,7 +169,8 @@ function trackCronAnalytics (analytics, user, _progress, options) {
     user,
     resting: user.preferences.sleep,
     cronCount: user.flags.cronCount,
-    progressUp: _.min([_progress.up, 900]),
+    progressUp: _progress.up,
+    progressUpWorldBoss: _.min([_progress.up, MAX_DAMAGE_TO_WORLD_BOSS]),
     progressDown: _progress.down,
     headers: options.headers,
     loginIncentives: user.loginIncentives,

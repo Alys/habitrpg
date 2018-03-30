@@ -37,6 +37,7 @@ const Schema = mongoose.Schema;
 
 export const INVITES_LIMIT = 100; // must not be greater than MAX_EMAIL_INVITES_BY_USER
 export const TAVERN_ID = shared.TAVERN_ID;
+export const MAX_DAMAGE_TO_WORLD_BOSS = 9999;
 
 const NO_CHAT_NOTIFICATIONS = [TAVERN_ID];
 const LARGE_GROUP_COUNT_MESSAGE_CUTOFF = shared.constants.LARGE_GROUP_COUNT_MESSAGE_CUTOFF;
@@ -1051,9 +1052,9 @@ process.nextTick(() => {
 schema.statics.tavernBoss = async function tavernBoss (user, progress) {
   if (!progress) return;
 
-  // hack: prevent crazy damage to world boss
-  let dmg = Math.min(900, Math.abs(progress.up || 0));
-  let rage = -Math.min(900, Math.abs(progress.down || 0));
+  // limit each cron's effect on the World Boss to prevent demotivating unexpected huge changes
+  let dmg = Math.min(MAX_DAMAGE_TO_WORLD_BOSS, Math.abs(progress.up || 0));
+  let rage = -Math.min(MAX_DAMAGE_TO_WORLD_BOSS, Math.abs(progress.down || 0));
 
   let tavern = await this.findOne(tavernQ).exec();
   if (!(tavern && tavern.quest && tavern.quest.key)) return;
