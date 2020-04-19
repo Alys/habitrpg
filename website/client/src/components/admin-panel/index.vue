@@ -155,7 +155,7 @@
                 <span v-else><strong>None</strong></span>
               </div>
               <div>
-                Apple ID authentication (not live yet as of March 2020):
+                Apple ID authentication:
                 <pre v-if="authMethodExists('apple')">{{ hero.auth.apple }}</pre>
                 <span v-else><strong>None</strong></span>
               </div>
@@ -173,19 +173,36 @@
               @click="expandParty = !expandParty"
             >
               Party, Quest
+              <span
+                v-if="errors.partyOrQuest"
+                v-html="errorsHeading"
+              ></span>
             </h3>
             <div v-if="expandParty">
               <div>
-                Party: &nbsp;
-                <span v-if="hero.party._id">Yes &nbsp;
-                  (party ID {{ hero.party._id }})
-                  although this has not been verified by searching for the Party.
-                </span>
-                <span v-else>No</span>
+                <p
+                  v-if="errors.partyOrQuest"
+                  class="errorMessage"
+                  v-html="errors.partyOrQuest"
+                ></p>
+                Party:
+                <span v-if="hasParty">
+									yes (party ID {{ hero.party._id }})
+									<br>
+									<span v-if="isPartyLeader">User is the party leader.</span>
+									<span v-else>Party leader is
+										<router-link :to="{'name': 'userProfile', 'params': {'userId': party.leader}}">
+											{{ party.leader }}
+										</router-link>
+									</span>
+								</span>
+                <span v-else>no</span>
               </div>
               <div class="subsection-start">
-                Quest: &nbsp;
-                {{ questStatus }}
+                <p v-html="questStatus"></p>
+                <!-- <pre>{{ TST_1 }}</pre> -->
+                <!-- <pre>{{ TST_2 }}</pre> -->
+                <!-- <pre>{{ TST_3 }}</pre> -->
               </div>
             </div>
           </div>
@@ -272,7 +289,7 @@
                           Change
                         </button>
                         <span>{{ item.valueForDisplay }} : </span>
-                        <span v-bind:class="{ ownedItem: !item.neverOwned }">{{ item.key }} :</span>
+                        <span :class="{ ownedItem: !item.neverOwned }">{{ item.key }} :</span>
                         <span v-html="item.name"></span>
                       </li>
                     </ul>
@@ -441,6 +458,9 @@
   .ownedItem {
     font-weight: bold;
   }
+  .errorMessage {
+    font-weight: bold;
+  }
 </style>
 
 <script>
@@ -463,6 +483,13 @@ export default {
     return {
       hero: {},
       heroID: '',
+      party: {},
+      hasParty: false,
+      isPartyLeader: false,
+      TST_1: '',
+      TST_2: '',
+      TST_3: '',
+      questStatus: '',
       content,
       collatedItemData: {},
       expandPriv: false,
@@ -483,26 +510,14 @@ export default {
       expandUpdateItems: false,
       expandContrib: false,
       itemTypes: ['eggs', 'hatchingPotions', 'food', 'pets', 'mounts', 'quests', 'gear', 'special'],
+      errorsHeading: '- ERROR EXISTS',
+      errors: {
+        partyOrQuest: '',
+      },
     };
   },
   computed: {
     ...mapState({ user: 'user.data' }),
-    questStatus () {
-      if (!this.hero.party || !this.hero.party.quest) return 'No';
-      const questKey = this.hero.party.quest.key || '';
-      if (this.hero.party.quest.RSVPNeeded) {
-        if (questKey) return `${questKey} : Invitation waiting.`;
-        return 'BUG! '
-          + 'Invitation is waiting but Quest "key" is not assigned. '
-          + 'Party might or might not have a Quest. '
-          + 'An admin needs to delete the invitation or assign the Quest key.';
-      }
-      if (questKey) {
-        return `${questKey} : Invitation has been accepted. `
-          + 'Quest is either running or still in invitation stage.';
-      }
-      return 'No (party might have a quest but user is not in it).';
-    },
   },
   // async mounted () {
   // },
@@ -722,21 +737,233 @@ export default {
       this.hero.itemPath = path;
       this.hero.itemVal = currentValue;
     },
+
+    determineQuestStatus () { // XXX check all paths through this
+      // Quest data is in the user doc and party doc. They can be out of sync.
+      // Here we collate data from both sources, showing error messages if needed.
+
+      // First get data from the party's doc.
+      let questExists = false; // true if quest is active or in invitation stage
+      let questIsRunning = false; // true if quest is active (invitation stage ended)
+      let invitationStatusForUser = '';
+      let expectedRsvpStatusForUser = false;
+      let errorMessage = '';
+			// XXX_SOON see if those variables are all needed
+      // this.TST_1 = 'this.hasParty - questIsRunning - this.party.quest.members';
+      // this.TST_2 = `${this.hasParty} - ${questIsRunning} - ${this.party.quest.members}`;
+      if (this.hasParty && this.party.quest) {
+        questIsRunning = this.party.quest.active;
+        if (this.party.quest.key) {
+          questExists = true;
+          if (!this.party.quest.members) {
+            errorMessage = 'quest is running or in invitation stage but has no participants';
+          } else if (this.party.quest.members[this.hero.id] === null) {
+            invitationStatusForUser = 'pending';
+            if (questIsRunning) {
+              errorMessage = 'quest is running but user\'s invitation is still pending in quest object';
+            } else {
+              expectedRsvpStatusForUser = true;
+            }
+          } else if (this.party.quest.members[this.hero.id] === false) {
+            invitationStatusForUser = 'rejected';
+            if (questIsRunning) errorMessage = 'quest is running and user\'s invitation was rejected BUT it wasn\'t cleared properly from the quest\'s data. ';
+          } else if (this.party.quest.members[this.hero.id] === true) {
+            invitationStatusForUser = 'accepted';
+          } else if (questIsRunning) {
+            invitationStatusForUser = 'rejected OR not accepted before quest start OR user joined party after quest started';
+            alert(invitationStatusForUser);
+          } else {
+            invitationStatusForUser = 'missing';
+            errorMessage = 'quest is in invitation stage but user doesn\'t have an invitation';
+          }
+        } else if (questIsRunning) {
+          errorMessage = 'quest is running but there is no "key" to say which quest it is.';
+					// TODO display a similar message for when it happens during invitation stage
+        }
+      }
+
+      let questStatus = '<p>';
+      if (questExists) {
+        questStatus = 'Quest exists and is ';
+        if (questIsRunning) {
+          questStatus += 'running.<br>User is ';
+          if (invitationStatusForUser !== 'accepted') questStatus += 'not ';
+          questStatus += 'a participant.';
+        } else {
+          questStatus += 'in invitation stage.<br>'
+            + `User's invitation is ${invitationStatusForUser}.`;
+        }
+				questStatus += '<br>';
+				if (this.party.quest.leader === this.hero.id) {
+					questStatus += 'User is the quest owner.';
+				} else {
+					questStatus += `Quest owner is <a href="/profile/${this.party.quest.leader}" target="_blank">${this.party.quest.leader}</a>`;// XXX_LATR improve
+				}
+      } else {
+        questStatus = 'No quest.';
+      }
+      if (errorMessage) {
+        questStatus += '<br>Quest is in erroneous state - see error above.';
+        this.errors.partyOrQuest += `ERROR: ${errorMessage}<br>`;
+      }
+      questStatus += '</p>';
+
+      // Assess quest participants.
+      if (questExists) {
+				questStatus += '<p>';
+        const countOfQuestPartipants = Object.keys(this.party.quest.members).length;
+        if (countOfQuestPartipants) {
+          questStatus += `Quest has ${countOfQuestPartipants} participants:<ul>`;
+				  for (const [memberId, invitationStatus] of Object.entries(this.party.quest.members)) {
+						questStatus += '<li>';
+						questStatus += (memberId === this.hero.id)
+							? `@${this.hero.auth.local.username}`
+							: `<a href="/profile/${memberId}" target="_blank">${memberId}</a>`;// XXX_LATR improve
+						const errMsg = ' - MINOR ERROR: this data should have been deleted when quest started';
+						let invitationDescription = '';
+						if (invitationStatus === true) {
+							if (!questIsRunning) invitationDescription = ' - invitation accepted';
+							// we don't display anything if quest is running - obvious that participant accepted
+						} else if (invitationStatus === false) {
+							invitationDescription += ' - invitation rejected';
+							if (questIsRunning) invitationDescription += errMsg;
+						} else {
+							invitationDescription += ' - invitation pending';
+							if (questIsRunning) invitationDescription += errMsg;
+						}
+						questStatus += invitationDescription;
+						questStatus += '</li>';
+					}
+          questStatus += '</ul></p>';
+        } else {
+          this.errors.partyOrQuest += 'ERROR: Quest has no participants.<br>';
+        }
+				questStatus += '</p>';
+      }
+
+      // Now get data from the user's doc and notify about errors.
+      if (!this.hero.party.quest) this.hero.party.quest = {};
+      if (this.hero.party.quest.RSVPNeeded !== expectedRsvpStatusForUser) {
+        this.errors.partyOrQuest += `ERROR: User's quest invitation ("party.quest.RSVPNeeded") should be "${expectedRsvpStatusForUser}" but isn't.<br>`;
+      }
+
+			// XXX UPTOHERE
+      if (invitationStatusForUser === 'pending' || invitationStatusForUser === 'accepted') {
+        if (!this.hero.party.quest.key) {
+          this.errors.partyOrQuest
+            += 'ERROR: User has accepted quest invitation or invitation is still pending but their account has no "key" for the quest.<br>';
+        } else if (this.hero.party.quest.key !== this.party.quest.key) {
+          this.errors.partyOrQuest
+            += `ERROR: User has accepted quest invitation but the "key" in their account (${this.hero.party.quest.key}) is different than the quest's "key" (${this.party.quest.key}).<br>`;
+        }
+      } else if (this.hero.party.quest.key) {
+        this.errors.partyOrQuest // XXX is this actually bad?
+          += 'ERROR: User has a "key" for the quest but should not have (no quest exists or user not participating).<br>';
+				// look into this:
+				// correct (past invitation stage):
+				//    ERROR: quest is running but there is no "key" to say which quest it is.
+				// wrong:
+				//    ERROR: User has a "key" for the quest but should not have
+				//           (no quest exists or user not participating).
+      }
+
+      // Display details of quest (name, type, progress, etc).
+      if (questExists) {
+        const questContent = this.content.quests[this.party.quest.key];
+        // alert(JSON.stringify(questContent, null, '  ')); // TST // eslint-disable-line no-console
+        questStatus += `<p>Quest "key": ${questContent.key}`; // XXX get name ("text") working
+        if (questContent.boss) {
+          questStatus += '' // `<br>Boss name: ${questContent.boss.name}` // XXX fix
+            + `<br>Boss HP: ${questContent.boss.hp}`
+            + `<br>Boss Strength: ${questContent.boss.str}`;
+          // XXX_SOON add rage details
+        } else {
+          questStatus += '<br>Collect:<ul>';
+				  for (const [key, obj] of Object.entries(questContent.collect)) {
+						questStatus += `<li>${key}: ${obj.count}</li>`; // XXX get name
+					}
+          questStatus += '</ul>';
+          // XXX FYI: "collect":{"moonstone":{"text":"Moonstones","count":100}},
+        }
+        questStatus += '</p>';
+
+        // XXX UPTOHERE
+        // XXX display this for running quest, and totals needed from content:
+        // "party.quest.progress": {
+        // "up": 0,
+        // "down": 0,
+        // "collectedItems": 0,
+        // "collect": {}
+        // },
+
+        // "basilist":{"text":"The Basi-List",
+        // "notes":"There's a ",
+        // "group":"questGroupEarnable",
+        // "completion":"The Basi-list has ",
+        // "goldValue":100,"category":"unlockable",
+        // "unlockCondition":{"condition":"party invite","text":"Invite Friends"},
+        // "boss":{"name":"The Basi-List","hp":100,"str":0.5,"def":1},
+        // "drop":{"gp":8,"exp":42},"key":"basilist"}
+      }
+
+			this.questStatus = questStatus; // XXX_SOON just use this. throughout?
+    },
+
     async loadHero (id) {
       let uuid = id || this.user._id;
       uuid = uuid.replace(/@/, ''); // allow "@name" to be entered
       const hero = await this.$store.dispatch('hall:getHero', { uuid });
       this.hero = { ...hero };
+
+      // XXX can we initialise data on page load and for user load with one function?
+
+      // initialise error messages for this user
+      this.errors = {
+        partyOrQuest: '',
+      };
+
       if (!this.hero.flags) {
         this.hero.flags = {
           chatRevoked: false,
           chatShadowMuted: false,
         };
       }
+
+      this.hasParty = false;
+      if (this.hero.party && this.hero.party._id) {
+        let party;
+        try {
+          party = await this.$store.dispatch('hall:getHeroParty', { groupId: this.hero.party._id });
+          this.hasParty = true;
+          this.party = { ...party };
+					this.isPartyLeader = this.party.leader === this.hero.id;
+        } catch (e) {
+          // the API's error message isn't worth reporting ("Request failed with status code 404")
+          this.errors.partyOrQuest += 'ERROR: User has a Party ID but that Party does not exist. '
+            + `Ask a database admin to delete their Party ID (${this.hero.party._id}).<br>`;
+        }
+      }
+
+      // XXX purge if not needed to clear data from previous run:
+      this.TST_1 = '';
+      this.TST_2 = '';
+      this.TST_3 = '';
+      this.questStatus = '';
+
+      // this.party.quest = {}; // TST
+      this.TST_2 = JSON.stringify(this.party.quest, null, '  ')
+        + JSON.stringify(this.user.party.quest, null, '  ');
+
+      this.determineQuestStatus();
+      // alert(this.errors.partyOrQuest);
+
       this.collatedItemData = this.collateItemData();
+
+      // collapse all sections except those with errors
       this.expandPriv = false;
       this.expandAuth = false;
-      this.expandParty = false;
+      // this.expandParty = this.errors.partyOrQuest; // XXX get this working
+      this.expandParty = 'XXX TST';
       this.expandAvatar = false;
       this.expandItems = false;
       this.expandUpdateItems = false;
