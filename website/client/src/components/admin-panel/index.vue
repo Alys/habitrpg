@@ -173,15 +173,17 @@
               @click="expandParty = !expandParty"
             >
               Party, Quest
+              <span v-if="this.errors.partyOrQuest" v-html="this.errorsHeading"></span>
             </h3>
             <div v-if="expandParty">
               <div>
-                Party: &nbsp;
-                <span v-if="hero.party._id">Yes &nbsp;
-                  (party ID {{ hero.party._id }})
-                  although this has not been verified by searching for the Party.
-                </span>
-                <span v-else>No</span>
+                <p v-if="this.errors.partyOrQuest"
+                  v-html="this.errors.partyOrQuest"
+                  class="errorMessage"
+                ></p>
+                Party:
+                <span v-if="this.hasParty">yes (party ID {{ hero.party._id }})</span>
+                <span v-else>no</span>
               </div>
               <div class="subsection-start">
                 Quest: &nbsp;
@@ -441,6 +443,9 @@
   .ownedItem {
     font-weight: bold;
   }
+  .errorMessage {
+    font-weight: bold;
+  }
 </style>
 
 <script>
@@ -463,6 +468,8 @@ export default {
     return {
       hero: {},
       heroID: '',
+      party: {},
+      hasParty: false,
       content,
       collatedItemData: {},
       expandPriv: false,
@@ -483,6 +490,10 @@ export default {
       expandUpdateItems: false,
       expandContrib: false,
       itemTypes: ['eggs', 'hatchingPotions', 'food', 'pets', 'mounts', 'quests', 'gear', 'special'],
+      errorsHeading: '- ERROR EXISTS',
+      errors: {
+        partyOrQuest: '',
+      },
     };
   },
   computed: {
@@ -727,16 +738,39 @@ export default {
       uuid = uuid.replace(/@/, ''); // allow "@name" to be entered
       const hero = await this.$store.dispatch('hall:getHero', { uuid });
       this.hero = { ...hero };
+
+      // initialise error messages for this user
+      this.errors = {
+        partyOrQuest: '',
+      };
+
       if (!this.hero.flags) {
         this.hero.flags = {
           chatRevoked: false,
           chatShadowMuted: false,
         };
       }
+
+      this.hasParty = false;
+      if (this.hero.party && this.hero.party._id) {
+        let party;
+        try {
+          party = await this.$store.dispatch('hall:getHeroParty', { groupId: this.hero.party._id });
+          this.hasParty = true;
+          this.party = { ...party };
+        } catch (e) {
+          // the API's error message isn't worth reporting ("Request failed with status code 404")
+          this.errors.partyOrQuest = 'DATA ERROR: User has a Party ID but that Party does not exist. '
+            + `Ask a database admin to delete their Party ID (${this.hero.party._id}).`;
+        }
+      }
+
       this.collatedItemData = this.collateItemData();
+
+      // collapse all sections except those with errors
       this.expandPriv = false;
       this.expandAuth = false;
-      this.expandParty = false;
+      this.expandParty = this.errors.partyOrQuest;
       this.expandAvatar = false;
       this.expandItems = false;
       this.expandUpdateItems = false;
