@@ -272,7 +272,7 @@
                           Change
                         </button>
                         <span>{{ item.valueForDisplay }} : </span>
-                        <span v-bind:class="{ ownedItem: !item.neverOwned }">{{ item.key }} :</span>
+                        <span :class="{ ownedItem: !item.neverOwned }">{{ item.key }} :</span>
                         <span v-html="item.name"></span>
                       </li>
                     </ul>
