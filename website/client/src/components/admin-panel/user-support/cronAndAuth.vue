@@ -106,31 +106,31 @@ import moment from 'moment';
 
 import filters from '../mixins/filters';
 
-function resetErrors (self) {
-    self.cronError = false;
-    self.timezoneDiffError = false;
-    self.timezoneMissingError = false;
-    self.errorsOrWarningsExist = false;
-    self.expand = false;
+function resetData (self) {
+  self.cronError = false;
+  self.timezoneDiffError = false;
+  self.timezoneMissingError = false;
+  self.errorsOrWarningsExist = false;
+  self.expand = false;
 
-    const cronDate1 = moment(self.auth.timestamps.loggedin);
-    const cronDate2 = moment(self.lastCron);
-    const maxAllowableSecondsDifference = 60; // expect cron to take less than this many seconds
-    if (Math.abs(cronDate1.diff(cronDate2, 'seconds')) > maxAllowableSecondsDifference) {
-      self.cronError = true;
-      self.errorsOrWarningsExist = true;
-    }
+  const cronDate1 = moment(self.auth.timestamps.loggedin);
+  const cronDate2 = moment(self.lastCron);
+  const maxAllowableSecondsDifference = 60; // expect cron to take less than this many seconds
+  if (Math.abs(cronDate1.diff(cronDate2, 'seconds')) > maxAllowableSecondsDifference) {
+    self.cronError = true;
+    self.errorsOrWarningsExist = true;
+  }
 
-    // compare the user's time zones to see if they're different
-    if (self.preferences.timezoneOffset === undefined
-      || self.preferences.timezoneOffsetAtLastCron === undefined) {
-      self.timezoneMissingError = true;
-      self.errorsOrWarningsExist = true;
-    } else if (self.preferences.timezoneOffset !== self.preferences.timezoneOffsetAtLastCron) {
-      self.timezoneDiffError = true;
-      self.errorsOrWarningsExist = true;
-    }
-    self.expand = self.errorsOrWarningsExist;
+  // compare the user's time zones to see if they're different
+  if (self.preferences.timezoneOffset === undefined
+    || self.preferences.timezoneOffsetAtLastCron === undefined) {
+    self.timezoneMissingError = true;
+    self.errorsOrWarningsExist = true;
+  } else if (self.preferences.timezoneOffset !== self.preferences.timezoneOffsetAtLastCron) {
+    self.timezoneDiffError = true;
+    self.errorsOrWarningsExist = true;
+  }
+  self.expand = self.errorsOrWarningsExist;
 }
 
 export default {
@@ -177,11 +177,11 @@ export default {
   },
   watch: {
     resetCounter () {
-      resetErrors(this);
+      resetData(this);
     },
   },
   mounted () {
-    resetErrors(this);
+    resetData(this);
   },
   methods: {
     authMethodExists (authMethod) {
