@@ -111,13 +111,22 @@
             :resetCounter="this.resetCounter"
           />
 
+          <party-and-quest
+            :userId="hero._id"
+            :userHasParty="hasParty"
+            :partyNotExistError="partyNotExistError"
+            :userPartyData="hero.party"
+            :groupPartyData="party"
+            :resetCounter="this.resetCounter"
+          />
+
           <div class="accordion-group">
             <h3
               class="expand-toggle"
               :class="{'open': expandParty}"
               @click="expandParty = !expandParty"
             >
-              Party, Quest
+              Party, Quest - XXX delete
               <span
                 v-if="errors.partyOrQuest"
                 v-html="errorsHeading"
@@ -404,12 +413,14 @@ import notifications from '@/mixins/notifications';
 import filters from './mixins/filters';
 import BasicDetails from './user-support/basicDetails';
 import CronAndAuth from './user-support/cronAndAuth';
+import PartyAndQuest from './user-support/partyAndQuest';
 import AvatarAndDrops from './user-support/avatarAndDrops';
 
 export default {
   components: {
     BasicDetails,
     CronAndAuth,
+    PartyAndQuest,
     AvatarAndDrops,
   },
   directives: {
@@ -423,12 +434,13 @@ export default {
       heroID: '',
       party: {},
       hasParty: false,
+      partyNotExistError: false,
       isPartyLeader: false,
       questStatus: '',
       content,
       collatedItemData: {},
       expandPriv: false,
-      expandParty: false,
+      expandParty: false, // XXX delete
       expandItems: false,
       expandItemType: {
         eggs: false,
@@ -446,7 +458,7 @@ export default {
       errorsHeading: '- ERROR EXISTS',
       errors: {
         priv: '',
-        partyOrQuest: '',
+        partyOrQuest: '', // XXX delete
       },
     };
   },
@@ -648,7 +660,7 @@ export default {
       this.hero.itemVal = currentValue;
     },
 
-    determineQuestStatus () {
+    determineQuestStatus () { // XXX delete
       // Quest data is in the user doc and party doc. They can be out of sync.
       // Here we collate data from both sources, showing error messages if needed.
 
@@ -850,7 +862,7 @@ export default {
       // initialise error messages for this user
       this.errors = {
         priv: '',
-        partyOrQuest: '',
+        partyOrQuest: '', // XXX delete
       };
 
       if (!this.hero.flags) {
@@ -874,21 +886,22 @@ export default {
           party = await this.$store.dispatch('hall:getHeroParty', { groupId: this.hero.party._id });
           this.hasParty = true;
           this.party = { ...party };
-          this.isPartyLeader = this.party.leader === this.hero.id;
+          this.isPartyLeader = this.party.leader === this.hero.id; // XXX delete
         } catch (e) {
           // the API's error message isn't worth reporting ("Request failed with status code 404")
-          this.errors.partyOrQuest += 'ERROR: User has a Party ID but that Party does not exist. '
+          this.partyNotExistError = true;
+          this.errors.partyOrQuest += 'ERROR: User has a Party ID but that Party does not exist. ' // XXX delete
             + `Ask a database admin to delete their Party ID (${this.hero.party._id}).<br>`;
         }
       }
 
-      this.questStatus = '';
-      this.determineQuestStatus();
+      this.questStatus = ''; // XXX delete
+      this.determineQuestStatus(); // XXX delete
       this.collatedItemData = this.collateItemData();
 
       // collapse all sections except those with errors
       this.expandPriv = this.errors.priv;
-      this.expandParty = this.errors.partyOrQuest;
+      this.expandParty = this.errors.partyOrQuest; // XXX delete
       this.expandItems = false;
       this.expandUpdateItems = false;
       this.expandContrib = false;
