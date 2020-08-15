@@ -260,13 +260,18 @@
             </div>
           </div>
 
+          <contributor-details
+            :contributor="hero.contributor"
+            :resetCounter="this.resetCounter"
+          />
+
           <div class="accordion-group">
             <h3
               class="expand-toggle"
               :class="{'open': expandContrib}"
               @click="expandContrib = !expandContrib"
             >
-              Contributor Details
+              Contributor Details XXX DELETE
             </h3>
             <div v-if="expandContrib">
               <form @submit.prevent="saveHero()">
@@ -328,6 +333,7 @@
               </form>
             </div>
           </div>
+
         </div>
       </div>
     </div>
@@ -378,6 +384,7 @@ import BasicDetails from './user-support/basicDetails';
 import CronAndAuth from './user-support/cronAndAuth';
 import PartyAndQuest from './user-support/partyAndQuest';
 import AvatarAndDrops from './user-support/avatarAndDrops';
+import ContributorDetails from './user-support/contributorDetails';
 
 export default {
   components: {
@@ -385,6 +392,7 @@ export default {
     CronAndAuth,
     PartyAndQuest,
     AvatarAndDrops,
+		ContributorDetails,
   },
   directives: {
     markdown: markdownDirective,
@@ -664,12 +672,13 @@ export default {
       this.expandPriv = this.errors.priv;
       this.expandItems = false;
       this.expandUpdateItems = false;
-      this.expandContrib = false;
+      this.expandContrib = true; // XXX delete
       this.itemTypes.forEach(itemType => { this.expandItemType[itemType] = false; });
       this.resetCounter += 1; // tell child components to reinstantiate from scratch
     },
     async saveHero () {
       this.hero.contributor.admin = this.hero.contributor.level > 7;
+			// XXX move that admin line and ensure it works when tier is increased or decreased
       await this.$store.dispatch('hall:updateHero', { heroDetails: this.hero });
       this.text('User updated');
       this.hero = {};
