@@ -24,6 +24,9 @@ module.exports = {
       svg: 'never',
       math: 'never',
     }],
+    'indent': 0,
+    'no-tabs': 0,
+    'no-mixed-spaces-and-tabs': 0,
   },
   parserOptions: {
     parser: 'babel-eslint',
