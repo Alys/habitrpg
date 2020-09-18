@@ -226,7 +226,7 @@
           </thead>
           <tbody>
             <tr
-              v-for="(hero, index) in heroes"
+              v-for="hero in heroes"
               :key="hero._id"
             >
               <td>
@@ -245,9 +245,10 @@
               <td
                 v-if="user.contributor.admin"
                 class="btn-link"
-                @click="populateContributorInput(hero._id, index)"
               >
-                {{ hero._id }}
+                <router-link :to="{ name: 'adminPanelUser', params: { userIdentifier: hero._id } }">
+                  {{ hero._id }}
+                </router-link>
               </td>
               <td>{{ hero.contributor.level }}</td>
               <td>{{ hero.contributor.text }}</td>
@@ -380,11 +381,6 @@ export default {
       this.heroID = -1;
       this.heroes[this.currentHeroIndex] = heroUpdated;
       this.currentHeroIndex = -1;
-    },
-    populateContributorInput (id, index) {
-      this.heroID = id;
-      window.scrollTo(0, 200);
-      this.loadHero(id, index);
     },
   },
 };

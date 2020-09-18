@@ -342,7 +342,25 @@ const router = new VueRouter({
       ],
     },
     {
-      path: '/admin-panel', name: 'adminPanel', component: AdminPanelPage, meta: { requiresAdmin: true },
+      name: 'adminPanel',
+      path: '/admin-panel',
+      component: AdminPanelPage,
+      meta: { requiresAdmin: true },
+      children: [
+        {
+          name: 'adminPanelUser',
+          path: '/admin-panel/:userIdentifier', // User ID or Username
+          component: AdminPanelPage,
+          meta: { requiresAdmin: true },
+          // beforeEnter: (to, from, next) => {
+            // if (to === from) {
+              // console.error('to from');
+              // // window.location.reload()
+            // }
+            // return next();
+          // },
+        },
+      ],
     },
     // Only used to handle some redirects
     // See router.beforeEach

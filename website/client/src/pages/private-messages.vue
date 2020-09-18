@@ -643,7 +643,7 @@ export default {
 
     await this.reload();
 
-    // close members modal if the Private Messages page is opened in an existing tab
+    // close modal in case the Private Messages page was opened in an existing tab from the modal
     this.$root.$emit('habitica::dismiss-modal', 'profile');
     this.$root.$emit('habitica::dismiss-modal', 'members-modal');
 
