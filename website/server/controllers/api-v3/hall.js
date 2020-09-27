@@ -145,7 +145,7 @@ api.getHeroes = {
 // Note, while the following routes are called getHero / updateHero
 // they can be used by admins to get/update any user
 
-const heroAdminFields = 'auth balance contributor flags items lastCron party preferences profile.name purchased secret';
+const heroAdminFields = 'apiToken auth balance contributor flags items lastCron party preferences profile.name purchased secret';
 
 const heroPartyAdminFields = 'balance challengeCount leader leaderOnly memberCount purchased quest';
 // must never include Party name, description, summary, leaderMessage
@@ -193,6 +193,9 @@ api.getHero = {
     if (!hero) throw new NotFound(res.t('userWithIDNotFound', { userId: heroId }));
     const heroRes = hero.toJSON({ minimize: true });
     heroRes.secret = hero.getSecretData();
+
+    heroRes.apiTokenObscured = hero.getObscuredApiToken();
+    heroRes.apiToken = undefined; // do not show full Token to admin
 
     // supply to the possible absence of hero.contributor
     // if we didn't pass minimize: true it would have returned all fields as empty

@@ -514,3 +514,11 @@ schema.methods.getSecretData = function getSecretData () {
 
   return user.secret;
 };
+
+schema.methods.getObscuredApiToken = function getObscuredApiToken () {
+  // Allows admins to see part of the API Token for user verification purposes
+  // without revealing it all, which would violate the user's security/privacy.
+  const user = this;
+  let token = user.apiToken;
+  return `${token.slice(0,4)}...${token.slice(-4)}`;
+};

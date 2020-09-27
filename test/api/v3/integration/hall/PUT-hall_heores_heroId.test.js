@@ -1,4 +1,5 @@
 import { v4 as generateUUID } from 'uuid';
+import { model as User } from '../../../../../website/server/models/user';
 import {
   generateUser,
   translate as t,
@@ -8,7 +9,7 @@ describe('PUT /heroes/:heroId', () => {
   let user;
 
   const heroFields = [
-    '_id', 'auth', 'balance', 'contributor', 'flags', 'items', 'lastCron',
+    '_id', 'apiToken', 'auth', 'balance', 'contributor', 'flags', 'items', 'lastCron',
     'party', 'preferences', 'profile', 'purchased', 'secret',
   ];
 
@@ -220,5 +221,19 @@ describe('PUT /heroes/:heroId', () => {
     // test hero values
     await hero.sync();
     expect(hero.items.special.snowball).to.equal(5);
+  });
+
+  it('does not accidentally update API Token', async () => {
+    const hero = await generateUser();
+    const originalToken = hero.apiToken;
+
+    // make any change to the user except the Token
+    const heroRes = await user.put(`/hall/heroes/${hero._id}`, {
+      contributor: { text: 'Astronaut' },
+    });
+
+    const updatedHero = await User.findById(hero._id).exec();
+    expect(updatedHero.apiToken).to.equal(originalToken);
+    expect(updatedHero.apiTokenObscured).to.not.exist;
   });
 });
