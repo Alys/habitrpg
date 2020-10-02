@@ -130,6 +130,10 @@
   </div>
 </template>
 
+<style lang="scss" scoped>
+  @import '~@/assets/scss/admin-panel.scss';
+</style>
+
 <script>
 import moment from 'moment';
 import formatDate from '../filters/formatDate';

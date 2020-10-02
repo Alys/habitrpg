@@ -47,10 +47,9 @@
             Balance
             <input
               v-model="hero.balance"
-              class="form-control"
+              class="form-control balanceField"
               type="number"
               step="0.25"
-              :style="{ 'width': '15ch' }"
             >
           </label>
           <span>
@@ -84,6 +83,14 @@
     </div>
   </div>
 </template>
+
+<style lang="scss" scoped>
+  @import '~@/assets/scss/admin-panel.scss';
+
+  .balanceField {
+    min-width: 15ch;
+  }
+</style>
 
 <script>
 import markdownDirective from '@/directives/markdown';

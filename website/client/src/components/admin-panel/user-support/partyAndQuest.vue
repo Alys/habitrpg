@@ -49,6 +49,10 @@
   </div>
 </template>
 
+<style lang="scss" scoped>
+  @import '~@/assets/scss/admin-panel.scss';
+</style>
+
 <script>
 import * as quests from '@/../../common/script/content/quests';
 

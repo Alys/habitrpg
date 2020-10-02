@@ -10,6 +10,10 @@
   </div>
 </template>
 
+<style lang="scss" scoped>
+  @import '~@/assets/scss/admin-panel.scss';
+</style>
+
 <script>
 export default {
   props: {

@@ -1,6 +1,7 @@
 <template>
   <div
     v-if="user.contributor.admin"
+    id="user-support"
   >
     <div
       v-if="hero && hero.profile"
@@ -54,35 +55,8 @@
   </div>
 </template>
 
-<style lang="scss">
-  .accordion-group .accordion-group {
-    margin-left: 1em;
-  }
-  h3 {
-    margin-top: 2em;
-  }
-  h4 {
-    margin-top: 1em;
-  }
-  .expand-toggle::after {
-    margin-left: 5px;
-  }
-  .subsection-start {
-    margin-top: 1em;
-  }
-  .form-inline {
-    margin-bottom: 1em;
-    input, span {
-      margin-left: 5px;
-    }
-  }
-  .errorMessage {
-    font-weight: bold;
-  }
-  .markdownPreview {
-    margin-left: 3em;
-    margin-top: 1em;
-  }
+<style lang="scss" scoped>
+  @import '~@/assets/scss/admin-panel.scss';
 </style>
 
 <script>
@@ -153,11 +127,9 @@ export default {
       this.hasParty = false;
       this.partyNotExistError = false;
       if (this.hero.party && this.hero.party._id) {
-        let party;
         try {
-          party = await this.$store.dispatch('hall:getHeroParty', { groupId: this.hero.party._id });
+          this.party = await this.$store.dispatch('hall:getHeroParty', { groupId: this.hero.party._id });
           this.hasParty = true;
-          this.party = { ...party };
         } catch (e) {
           // the API's error message isn't worth reporting ("Request failed with status code 404")
           this.partyNotExistError = true;

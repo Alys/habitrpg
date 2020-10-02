@@ -23,6 +23,10 @@
   </div>
 </template>
 
+<style lang="scss" scoped>
+  @import '~@/assets/scss/admin-panel.scss';
+</style>
+
 <script>
 import formatDate from '../filters/formatDate';
 import getItemDescription from '../mixins/getItemDescription';

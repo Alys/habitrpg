@@ -81,9 +81,8 @@
                     <input
                       v-if="item.valueIsInteger"
                       v-model="item.value"
-                      class="form-control"
+                      class="form-control valueField"
                       type="number"
-                      :style="{ 'width': '10ch' }"
                     >
                     <input
                       v-if="item.modified"
@@ -102,12 +101,17 @@
   </div>
 </template>
 
-<style lang="scss">
+<style lang="scss" scoped>
+  @import '~@/assets/scss/admin-panel.scss';
+
   .ownedItem {
     font-weight: bold;
   }
   .enableValueChange:hover {
     text-decoration: underline;
+  }
+  .valueField {
+    min-width: 10ch;
   }
 </style>
 

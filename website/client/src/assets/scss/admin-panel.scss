@@ -1,0 +1,30 @@
+#admin-panel #user-support {
+  .accordion-group .accordion-group {
+    margin-left: 1em;
+  }
+  h3 {
+    margin-top: 2em;
+  }
+  h4 {
+    margin-top: 1em;
+  }
+  .expand-toggle::after {
+    margin-left: 5px;
+  }
+  .subsection-start {
+    margin-top: 1em;
+  }
+  .form-inline {
+    margin-bottom: 1em;
+    input, span {
+      margin-left: 5px;
+    }
+  }
+  .errorMessage {
+    font-weight: bold;
+  }
+  .markdownPreview {
+    margin-left: 3em;
+    margin-top: 1em;
+  }
+}
